@@ -1,0 +1,37 @@
+# 📘 Manual de Operação - Sistema Bel-tour
+
+Este manual descreve como utilizar e manter o sistema de movimentação online.
+
+---
+
+## 1. Acesso ao Painel Administrativo (`admin.html`)
+* **Link:** `seusite.vercel.app/admin.html`
+* **Segurança:** Ao abrir a página, será solicitada a **Senha Mestre** definida no código.
+* **Funcionalidades:**
+    * **Cadastro:** Insira Nome, Matrícula e E-mail do novo motorista.
+    * **Senha:** Use o botão "Gerar Senha" para criar um código de 6 dígitos aleatórios.
+    * **Logs:** Clique em "Atualizar Logs" para ver quem usou o sistema recentemente.
+
+## 2. Operação do Usuário (`index.html`)
+* **Fluxo:** O motorista seleciona a atividade (Embarque, Abastecimento, etc.).
+* **Identificação:** Ao digitar a matrícula, o sistema busca o nome no arquivo `motoristas.js`.
+* **Relatório:** O usuário clica em "Copiar Relatório" ou "Copiar Curto".
+* **Registro Automático:** No momento do clique, o sistema envia silenciosamente um log para o banco de dados informando quem gerou o relatório.
+
+## 3. Manutenção e Atualização de Dados
+### Adicionar motoristas antigos (Lista Fixa):
+* Abra o arquivo `motoristas.js` no GitHub.
+* Adicione a linha: `"MATRICULA": "NOME"`.
+* Salve (Commit) as alterações.
+
+### Adicionar novos motoristas (Lista Dinâmica com Senha):
+* Use exclusivamente o painel `admin.html`. Os dados salvos lá são armazenados no **Vercel KV** e não expõem o código-fonte.
+
+## 4. Solução de Problemas
+* **Logs não aparecem:** Verifique se o "Storage KV" está conectado ao projeto na aba 'Storage' do painel da Vercel.
+* **Erro de Deploy:** Certifique-se de que o arquivo `package.json` está na raiz com a dependência `@vercel/kv`.
+* **Visual desconfigurado:** O sistema foi otimizado para não precisar de rolagem lateral. Em celulares, use sempre na vertical.
+
+---
+**Propriedade de:** Tiago da Conceição Araújo (Araújo II)
+**Data:** 2026

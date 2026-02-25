@@ -188,10 +188,10 @@
         const motoristaValido = mat && !n.includes("NÃO LOCALIZADO") && !n.includes("Aguardando");
 
         if (tipo === 'curto') {
-            let res = `${saudacao}\n${incH ? h+':'+mi+'\n' : ''}\n${v?'VTR '+v+'\n':''}${emb}${icm?' (ICMbio)':''}\n${q} ${emb==='ABASTECIMENTO'?'KM':'Inter'}`;
+            let res = `${saudacao}\n${incH ? h+':'+mi+'\n' : ''}\n${v?'VTR '+v+'\n':''}${emb}${icm?' (ICMbio)':''}\n${q} ${emb==='ABASTECIMENTO'?'KM':'Integrantes'}`;
             if (sh) res += `\nSegundo Horário`;
-            let extras = []; if(bv) extras.push("B/V"); if(ab) extras.push("+Abast");
-            if(extras.length > 0) res += ` (${extras.join("/")})`;
+            let extras = []; if(bv) extras.push("Bate e volta"); if(ab) extras.push("+Abastecimento");
+            if(extras.length > 0) res += ` (${extras.join(" / ")})`;
             if(motoristaValido) res += `\n\n👤 ${n}\n🆔 ${mat}`;
             return res;
         } else {
@@ -204,13 +204,20 @@
         }
     }
 
-    async function copiarRelatorio(tipo) {
+    async function registrarLog(tipo) {
         const t = gerarTexto(tipo); const m = document.getElementById('matricula').value; const n = document.getElementById('nome-exibicao').innerText;
-        navigator.clipboard.writeText(t).then(async () => {
-            const s = document.getElementById('status'); s.style.visibility = 'visible'; setTimeout(() => s.style.visibility = 'hidden', 2000);
-            if (m && !n.includes("Aguardando") && !n.includes("NÃO")) {
+        if (m && !n.includes("Aguardando") && !n.includes("NÃO")) {
+            try {
                 await fetch('/api/gerenciar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ acao: 'registrar_log', log: { usuario: `${n} (${m})`, texto: `Gerou ${tipo} - Van ${document.getElementById('van').value || '?'}` } }) });
-            }
+            } catch (e) { console.log("Erro log"); }
+        }
+    }
+
+    function copiarRelatorio(tipo) {
+        const t = gerarTexto(tipo);
+        navigator.clipboard.writeText(t).then(() => {
+            const s = document.getElementById('status'); s.style.visibility = 'visible'; setTimeout(() => s.style.visibility = 'hidden', 2000);
+            registrarLog(tipo);
         });
     }
 

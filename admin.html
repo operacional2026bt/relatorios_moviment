@@ -3,134 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrador - Bel-tour</title>
+    <title>Painel de Controle - Bel-tour</title>
     <style>
-        body { background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .restrito { width: 100%; max-width: 400px; display: none; }
-        #login { width: 100%; max-width: 400px; margin-top: 50px; }
-        .card { background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; width: 100%; box-sizing: border-box; }
-        h2 { color: #00e676; font-size: 14px; text-transform: uppercase; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-ok { background: #00e676; color: #000; margin-bottom: 10px; }
-        .btn-at { background: #333; color: #00e676; border: 1px solid #00e676; font-size: 12px; margin-bottom: 10px; }
-        .linha-mot { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding: 10px 0; font-size: 13px; }
-        .acoes { display: flex; gap: 8px; }
-        .btn-edit { background: #0288d1; color: white; padding: 6px 10px; border-radius: 4px; font-size: 10px; }
-        .btn-excluir { background: #b71c1c; color: white; padding: 6px 12px; border-radius: 4px; font-size: 10px; }
-        .item-log { border-bottom: 1px solid #333; padding: 10px 0; font-size: 11px; list-style: none; color: #aaa; }
+        /* PADRÃO VISUAL DARK TIAGO ARAUJO */
+        body { 
+            background-color: #121212; color: #e0e0e0; 
+            font-family: -apple-system, sans-serif; margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+        }
+        .container { width: 100%; max-width: 400px; }
+        .card { 
+            background: #1e1e1e; padding: 15px; border-radius: 8px; 
+            border: 1px solid #333; margin-bottom: 20px; width: 100%; box-sizing: border-box;
+        }
+        h2 { color: #00e676; font-size: 14px; text-transform: uppercase; text-align: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
+        /* Campo de Entrada */
+        label { font-size: 12px; color: #888; display: block; margin-bottom: 5px; }
+        .input-group { position: relative; width: 100%; margin-bottom: 15px; }
+        input { 
+            width: 100%; padding: 12px; 
+            background: #2a2a2a; border: 1px solid #444; color: white; 
+            border-radius: 6px; font-size: 16px; outline: none; box-sizing: border-box;
+        }
+        .eye-icon {
+            position: absolute; right: 12px; top: 12px;
+            cursor: pointer; color: #00e676; font-size: 18px; user-select: none;
+        }
+
+        /* Botões */
+        button { 
+            width: 100%; padding: 14px; border: none; border-radius: 8px; 
+            font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.3s;
+        }
+        .btn-salvar { background: #00e676; color: #000; margin-bottom: 10px; }
+        .btn-at { background: #333; color: #00e676; border: 1px solid #00e676; margin-bottom: 15px; }
+        
+        /* Listagem Vertical */
+        .lista-container { max-height: 300px; overflow-y: auto; }
+        .linha-mot { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid #333; padding: 12px 0; font-size: 13px;
+        }
+        .btn-acao { padding: 8px 12px; border-radius: 4px; font-size: 10px; margin-left: 5px; width: auto; font-weight: bold; }
+        .edit { background: #0288d1; color: white; }
+        .del { background: #b71c1c; color: white; }
+        
+        .log-item { border-bottom: 1px solid #333; padding: 8px 0; font-size: 11px; color: #aaa; }
     </style>
 </head>
 <body>
-    <div id="login">
-        <div class="card">
-            <h2>ACESSO ADMINISTRADOR</h2>
-            <input type="password" id="pass" placeholder="Senha de Acesso">
-            <button class="btn-ok" onclick="acessar()">ENTRAR</button>
+
+<div class="container">
+    <h2>CADASTRAR / EDITAR</h2>
+    <div class="card">
+        <label>Matrícula</label>
+        <div class="input-group">
+            <input type="number" id="m-mat" placeholder="Ex: 3240">
         </div>
+
+        <label>Nome do Motorista</label>
+        <div class="input-group">
+            <input type="text" id="m-nome" placeholder="NOME COMPLETO">
+        </div>
+        
+        <label>Senha do Usuário</label>
+        <div class="input-group">
+            <input type="password" id="m-senha" placeholder="Confira no olho ao lado">
+            <span class="eye-icon" onclick="togglePassword('m-senha')">👁️</span>
+        </div>
+        
+        <button class="btn-salvar" onclick="salvarDados()">SALVAR DADOS</button>
     </div>
 
-    <div class="restrito" id="painel">
-        <h2>CADASTRAR / EDITAR</h2>
-        <div class="card">
-            <input type="number" id="mat" placeholder="Matrícula">
-            <input type="text" id="nome" placeholder="Nome do Motorista">
-            <input type="text" id="senha" placeholder="Senha (opcional)">
-            <button class="btn-ok" onclick="salvar()">SALVAR MOTORISTA</button>
-        </div>
-
-        <h2>MOTORISTAS NO BANCO</h2>
-        <div class="card">
-            <button class="btn-at" onclick="listarMotoristas()">ATUALIZAR LISTAGEM</button>
-            <div id="lista-motoristas"></div>
-        </div>
-
-        <h2>HISTÓRICO DE LOGS</h2>
-        <div class="card">
-            <button class="btn-at" onclick="carregarLogs()">VER MOVIMENTAÇÕES</button>
-            <ul id="log-list" style="padding:0"></ul>
-        </div>
+    <h2>MOTORISTAS CADASTRADOS</h2>
+    <div class="card">
+        <button class="btn-at" onclick="listarMotoristas()">ATUALIZAR LISTAGEM</button>
+        <div id="lista-motoristas" class="lista-container"></div>
     </div>
 
-    <script>
-        const SENHA_ADM = "TIAGO2026"; 
+    <h2>HISTÓRICO DE MOVIMENTAÇÃO</h2>
+    <div class="card">
+        <button class="btn-at" onclick="carregarLogs()">VER LOGS RECENTES</button>
+        <div id="log-list" class="lista-container"></div>
+    </div>
+</div>
 
-        function acessar() {
-            if(document.getElementById('pass').value === SENHA_ADM) {
-                document.getElementById('login').style.display = 'none';
-                document.getElementById('painel').style.display = 'block';
-                listarMotoristas();
-                carregarLogs();
-            } else { alert("Senha incorreta"); }
-        }
+<script>
+    // Função para mostrar/esconder senha (O Olhinho)
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        input.type = input.type === "password" ? "text" : "password";
+    }
 
-        async function salvar() {
-            const m = { mat: document.getElementById('mat').value, nome: document.getElementById('nome').value.toUpperCase(), senha: document.getElementById('senha').value };
-            if(!m.mat || !m.nome) return alert("Preencha Matrícula e Nome!");
-            
-            const res = await fetch('/api/gerenciar', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ acao: 'salvar_motorista', motorista: m }) 
-            });
+    async function salvarDados() {
+        const m = {
+            mat: document.getElementById('m-mat').value,
+            nome: document.getElementById('m-nome').value.toUpperCase(),
+            senha: document.getElementById('m-senha').value
+        };
+        if (!m.mat || !m.nome) return alert("Matrícula e Nome são obrigatórios!");
 
-            if(res.ok) {
-                alert("Dados Enviados!");
-                listarMotoristas();
-                document.getElementById('mat').value = '';
-                document.getElementById('nome').value = '';
-                document.getElementById('senha').value = '';
-            }
-        }
-
-        async function listarMotoristas() {
-            const res = await fetch('/api/gerenciar', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ acao: 'listar_todos_motoristas' }) 
-            });
-            const dados = await res.json();
-            const div = document.getElementById('lista-motoristas');
-            div.innerHTML = dados.map(m => `
-                <div class="linha-mot">
-                    <span><b>${m.mat}</b> - ${m.nome}</span>
-                    <div class="acoes">
-                        <button class="btn-edit" onclick="prepararEdicao('${m.mat}', '${m.nome}', '${m.senha}')">EDITAR</button>
-                        <button class="btn-excluir" onclick="excluirDirect('${m.mat}')">APAGAR</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function prepararEdicao(mat, nome, senha) {
-            document.getElementById('mat').value = mat;
-            document.getElementById('nome').value = nome;
-            document.getElementById('senha').value = (senha === "undefined" || senha === "null") ? "" : senha;
-            window.scrollTo(0,0);
-        }
-
-        async function excluirDirect(mat) {
-            if(!confirm("Excluir matrícula " + mat + "?")) return;
-            await fetch('/api/gerenciar', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ acao: 'excluir_motorista', mat: mat }) 
-            });
+        const res = await fetch('/api/gerenciar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acao: 'salvar_motorista', motorista: m })
+        });
+        if (res.ok) { 
+            alert("Motorista salvo com sucesso!"); 
             listarMotoristas();
+            document.getElementById('m-mat').value = '';
+            document.getElementById('m-nome').value = '';
+            document.getElementById('m-senha').value = '';
         }
+    }
 
-        async function carregarLogs() {
-            const res = await fetch('/api/gerenciar', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ acao: 'listar_logs' }) 
-            });
-            const logs = await res.json();
-            document.getElementById('log-list').innerHTML = logs.map(l => {
-                const item = JSON.parse(l);
-                return `<li class="item-log"><b>${new Date(item.data).toLocaleString('pt-BR')}</b><br>${item.usuario}: ${item.detalhes}</li>`;
-            }).join('');
-        }
-    </script>
+    async function listarMotoristas() {
+        const res = await fetch('/api/gerenciar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acao: 'listar_todos_motoristas' })
+        });
+        const dados = await res.json();
+        const div = document.getElementById('lista-motoristas');
+        div.innerHTML = dados.map(m => `
+            <div class="linha-mot">
+                <span><b>${m.mat}</b> - ${m.nome}</span>
+                <div style="display:flex">
+                    <button class="btn-acao edit" onclick="prepararEdicao('${m.mat}','${m.nome}','${m.senha}')">EDITAR</button>
+                    <button class="btn-acao del" onclick="excluirMot('${m.mat}')">X</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function prepararEdicao(mat, nome, senha) {
+        document.getElementById('m-mat').value = mat;
+        document.getElementById('m-nome').value = nome;
+        document.getElementById('m-senha').value = (senha === "undefined" || senha === "null") ? "" : senha;
+        window.scrollTo(0,0);
+    }
+
+    async function excluirMot(mat) {
+        if(!confirm("Deseja realmente excluir a matrícula " + mat + "?")) return;
+        await fetch('/api/gerenciar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acao: 'excluir_motorista', mat })
+        });
+        listarMotoristas();
+    }
+
+    async function carregarLogs() {
+        const res = await fetch('/api/gerenciar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acao: 'listar_logs' })
+        });
+        const logs = await res.json();
+        document.getElementById('log-list').innerHTML = logs.map(l => {
+            const i = JSON.parse(l);
+            return `<div class="log-item">
+                <b style="color:#00e676">${new Date(i.data).toLocaleString('pt-BR')}</b><br>
+                ${i.usuario}: ${i.detalhes}
+            </div>`;
+        }).join('');
+    }
+
+    // Inicialização automática
+    window.onload = () => {
+        listarMotoristas();
+        carregarLogs();
+    };
+</script>
 </body>
 </html>

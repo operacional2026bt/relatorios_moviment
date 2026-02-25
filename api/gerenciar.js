@@ -1,52 +1,42 @@
 import { kv } from '@vercel/kv';
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Acesso negado' });
-    const { acao, motorista, log, mat } = req.body;
+    const { acao } = req.method === 'POST' ? req.body : req.query;
 
     try {
-        // SALVAR OU EDITAR MOTORISTA
         if (acao === 'salvar_motorista') {
-            await kv.hset(`motorista:${motorista.mat}`, {
-                nome: motorista.nome,
-                senha: motorista.senha || ''
-            });
-            return res.status(200).json({ status: 'ok' });
+            const { matricula, nome, senha } = req.body;
+            await kv.hset(`motorista:${matricula}`, { matricula, nome, senha });
+            // Atualiza a lista global de matrículas para a listagem
+            await kv.sadd('lista_matriculas', matricula);
+            return res.status(200).json({ sucesso: true });
         }
 
-        // EXCLUIR MOTORISTA
-        if (acao === 'excluir_motorista') {
-            await kv.del(`motorista:${mat}`);
-            return res.status(200).json({ status: 'removido' });
-        }
-
-        // LISTAR TODOS OS MOTORISTAS DINÂMICOS
-        if (acao === 'listar_todos_motoristas') {
-            const chaves = await kv.keys('motorista:*');
-            const todos = [];
-            for (const chave of chaves) {
-                const dados = await kv.hgetall(chave);
-                if (dados) {
-                    todos.push({ mat: chave.split(':')[1], nome: dados.nome, senha: dados.senha });
-                }
+        if (acao === 'listar_motoristas') {
+            const matriculas = await kv.smembers('lista_matriculas');
+            const motoristas = [];
+            for (const mat of matriculas) {
+                const dados = await kv.hgetall(`motorista:${mat}`);
+                if (dados) motoristas.push(dados);
             }
-            return res.status(200).json(todos);
+            return res.status(200).json(motoristas);
         }
 
-        // REGISTRAR LOG DE ATIVIDADE
-        if (acao === 'registrar_log') {
-            const novoLog = { data: new Date().toISOString(), usuario: log.usuario, detalhes: log.texto };
-            await kv.lpush('sistema:logs', JSON.stringify(novoLog));
-            await kv.ltrim('sistema:logs', 0, 99);
-            return res.status(200).json({ status: 'logado' });
+        if (acao === 'excluir_motorista') {
+            const { matricula } = req.body;
+            await kv.del(`motorista:${matricula}`);
+            await kv.srem('lista_matriculas', matricula);
+            return res.status(200).json({ sucesso: true });
         }
 
-        // LISTAR LOGS PARA O ADM/SUPORTE
-        if (acao === 'listar_logs') {
-            const logs = await kv.lrange('sistema:logs', 0, -1);
-            return res.status(200).json(logs);
+        if (acao === 'buscar_motorista') {
+            const { matricula } = req.query;
+            const dados = await kv.hgetall(`motorista:${matricula}`);
+            return res.status(200).json(dados || null);
         }
-    } catch (e) {
-        return res.status(500).json({ error: e.message });
+
+        return res.status(400).json({ msg: 'Ação inválida' });
+    } catch (error) {
+        return res.status(500).json({ sucesso: false, msg: error.message });
     }
 }

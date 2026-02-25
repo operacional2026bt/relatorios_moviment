@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const { acao, motorista, log, mat } = req.body;
 
     try {
-        // Salvar ou Alterar
+        // 1. SALVAR OU EDITAR MOTORISTA
         if (acao === 'salvar_motorista') {
             await kv.hset(`motorista:${motorista.mat}`, {
                 nome: motorista.nome,
@@ -14,13 +14,13 @@ export default async function handler(req, res) {
             return res.status(200).json({ status: 'ok' });
         }
 
-        // Excluir
+        // 2. EXCLUIR MOTORISTA
         if (acao === 'excluir_motorista') {
             await kv.del(`motorista:${mat}`);
             return res.status(200).json({ status: 'removido' });
         }
 
-        // Listar TODOS os motoristas para a tabela do ADM
+        // 3. LISTAR TODOS OS MOTORISTAS (O que estava faltando!)
         if (acao === 'listar_todos_motoristas') {
             const chaves = await kv.keys('motorista:*');
             const todos = [];
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
             return res.status(200).json(todos);
         }
 
-        // Registrar Log (Motorista)
+        // 4. REGISTRAR LOG (Vindo do index.html)
         if (acao === 'registrar_log') {
             const novoLog = { data: new Date().toISOString(), usuario: log.usuario, detalhes: log.texto };
             await kv.lpush('sistema:logs', JSON.stringify(novoLog));
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
             return res.status(200).json({ status: 'logado' });
         }
 
-        // Listar Logs
+        // 5. LISTAR LOGS
         if (acao === 'listar_logs') {
             const logs = await kv.lrange('sistema:logs', 0, -1);
             return res.status(200).json(logs);

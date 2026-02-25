@@ -1,1 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrador</title>
+    <style>
+        body { background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .restrito { width: 100%; max-width: 400px; display: none; }
+        #login { width: 100%; max-width: 400px; margin-top: 50px; }
+        .card { background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
+        h2 { color: #00e676; font-size: 14px; text-transform: uppercase; margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-ok { background: #00e676; color: #000; }
+        .btn-log { background: #333; color: #00e676; border: 1px solid #00e676; margin-top: 10px; }
+        .btn-del { background: #3d1a1a; color: #ff5252; margin-top: 20px; font-size: 11px; }
+        .lista { padding: 0; }
+        .item { border-bottom: 1px solid #333; padding: 10px 0; font-size: 12px; list-style: none; }
+    </style>
+</head>
+<body>
+    <div id="login">
+        <div class="card">
+            <h2>ACESSO ADMINISTRADOR</h2>
+            <input type="password" id="pass" placeholder="Senha de Acesso">
+            <button class="btn-ok" onclick="acessar()">ENTRAR</button>
+        </div>
+    </div>
+
+    <div class="restrito" id="painel">
+        <h2>GERENCIAR DADOS</h2>
+        <div class="card">
+            <input type="number" id="mat" placeholder="Matrícula">
+            <input type="text" id="nome" placeholder="Nome do Motorista">
+            <input type="text" id="senha" placeholder="Senha (6 dígitos)">
+            <button class="btn-ok" onclick="salvar()">SALVAR / ATUALIZAR</button>
+            <button class="btn-del" onclick="excluir()">EXCLUIR REGISTRO</button>
+        </div>
+
+        <h2>HISTÓRICO DE ATIVIDADE</h2>
+        <div class="card">
+            <button class="btn-log" onclick="carregar()">ATUALIZAR LISTA</button>
+            <ul id="log-list" class="lista"></ul>
+        </div>
+    </div>
+
+    <script>
+        const SENHA_ADM = "TIAGO2026"; // Senha para os seus auxiliares
+
+        function acessar() {
+            if(document.getElementById('pass').value === SENHA_ADM) {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('painel').style.display = 'block';
+                carregar();
+            } else { alert("Senha incorreta"); }
+        }
+
+        async function salvar() {
+            const m = { mat: document.getElementById('mat').value, nome: document.getElementById('nome').value.toUpperCase(), senha: document.getElementById('senha').value };
+            if(!m.mat || !m.nome) return alert("Preencha Matrícula e Nome!");
+            await fetch('/api/gerenciar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ acao: 'salvar_motorista', motorista: m }) });
+            alert("Salvo com sucesso!");
+        }
+
+        async function excluir() {
+            const mat = document.getElementById('mat').value;
+            if(!mat || !confirm("Confirmar exclusão?")) return;
+            await fetch('/api/gerenciar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ acao: 'excluir_motorista', mat }) });
+            alert("Removido.");
+        }
+
+        async function carregar() {
+            const res = await fetch('/api/gerenciar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ acao: 'listar_logs' }) });
+            const logs = await res.json();
+            document.getElementById('log-list').innerHTML = logs.map(l => {
+                const item = JSON.parse(l);
+                return `<li class="item"><b>${new Date(item.data).toLocaleString('pt-BR')}</b><br>${item.usuario}: ${item.detalhes}</li>`;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
 

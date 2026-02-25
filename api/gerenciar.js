@@ -1,50 +1,52 @@
 import { kv } from '@vercel/kv';
 
 export default async function handler(req, res) {
-    // Só aceita requisições do tipo POST por segurança
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método não permitido' });
-    }
-
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Acesso negado' });
     const { acao, motorista, log, mat } = req.body;
 
     try {
-        // Ação para o Administrador: Salvar ou Alterar Motorista
+        // Salvar ou Alterar
         if (acao === 'salvar_motorista') {
             await kv.hset(`motorista:${motorista.mat}`, {
                 nome: motorista.nome,
                 senha: motorista.senha || ''
             });
-            return res.status(200).json({ status: 'sucesso' });
+            return res.status(200).json({ status: 'ok' });
         }
 
-        // Ação para o Administrador: Excluir Motorista
+        // Excluir
         if (acao === 'excluir_motorista') {
             await kv.del(`motorista:${mat}`);
             return res.status(200).json({ status: 'removido' });
         }
 
-        // Ação do Motorista: Registrar Log ao copiar relatório
+        // Listar TODOS os motoristas para a tabela do ADM
+        if (acao === 'listar_todos_motoristas') {
+            const chaves = await kv.keys('motorista:*');
+            const todos = [];
+            for (const chave of chaves) {
+                const dados = await kv.hgetall(chave);
+                if (dados) {
+                    todos.push({ mat: chave.split(':')[1], nome: dados.nome, senha: dados.senha });
+                }
+            }
+            return res.status(200).json(todos);
+        }
+
+        // Registrar Log (Motorista)
         if (acao === 'registrar_log') {
-            const novoLog = {
-                data: new Date().toISOString(),
-                usuario: log.usuario,
-                detalhes: log.texto
-            };
-            // Adiciona o log no topo da lista
+            const novoLog = { data: new Date().toISOString(), usuario: log.usuario, detalhes: log.texto };
             await kv.lpush('sistema:logs', JSON.stringify(novoLog));
-            // Mantém apenas os últimos 100 logs para não sobrecarregar
             await kv.ltrim('sistema:logs', 0, 99);
             return res.status(200).json({ status: 'logado' });
         }
 
-        // Ação para o Administrador: Listar Logs para análise
+        // Listar Logs
         if (acao === 'listar_logs') {
             const logs = await kv.lrange('sistema:logs', 0, -1);
             return res.status(200).json(logs);
         }
-
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 }

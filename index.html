@@ -174,7 +174,10 @@
 
     function validarVisibilidade() {
         const q = document.getElementById('quantidade').value; const v = document.getElementById('van').value; const m = document.getElementById('matricula').value;
-        document.getElementById('preview-container').style.display = (q || v || m) ? 'block' : 'none';
+        const icm = document.getElementById('icmbio').checked; const incH = document.getElementById('incHorario').checked;
+        const bv = document.getElementById('bateVolta').checked; const sh = document.getElementById('segundoHorario').checked; const ab = document.getElementById('extraAbast').checked;
+        
+        document.getElementById('preview-container').style.display = (q || v || m || icm || incH || bv || sh || ab) ? 'block' : 'none';
         document.getElementById('preview').innerText = gerarTexto('completo'); document.getElementById('preview-curto').innerText = gerarTexto('curto');
     }
 
@@ -190,16 +193,26 @@
         if (tipo === 'curto') {
             let res = `${saudacao}\n${incH ? h+':'+mi+'\n' : ''}\n${v?'VTR '+v+'\n':''}${emb}${icm?' (ICMbio)':''}\n${q} ${emb==='ABASTECIMENTO'?'KM':'Integrantes'}`;
             if (sh) res += `\nSegundo Horário`;
-            let extras = []; if(bv) extras.push("Bate e volta"); if(ab) extras.push("+Abastecimento");
-            if(extras.length > 0) res += ` (${extras.join(" / ")})`;
-            if(motoristaValido) res += `\n\n👤 ${n}\n🆔 ${mat}`;
+            
+            // LÓGICA CORRIGIDA DOS PARÊNTESES
+            let extras = [];
+            if (bv) extras.push("Bate e volta");
+            if (ab) extras.push("+Abastecimento");
+            if (extras.length > 0) res += ` (${extras.join(" / ")})`;
+            
+            if (motoristaValido) res += `\n\n👤 ${n}\n🆔 ${mat}`;
             return res;
         } else {
             let txt = `${saudacao}\n\n*RELATÓRIO DE VANS*\n📍 Local: ${emb}${icm?' (ICMbio)':''}\n⏰ Horário: ${h}:${mi}\n${emb==='ABASTECIMENTO'?'🛣️ KM':'👥 Qtd'}: ${q}\n${v?'🚐 Van: '+v+'\n':''}`;
-            if(sh) txt += `⌛ Segundo Horário\n`;
-            let obs = []; if(bv) obs.push("Bate e Volta"); if(ab) obs.push("+ Abastecimento");
-            if(obs.length > 0) txt += `📝 Obs: ${obs.join(" / ")}\n`;
-            if(motoristaValido) txt += `\n👤 Motorista: ${n}\n🆔 Matrícula: ${mat}`;
+            if (sh) txt += `⌛ Segundo Horário\n`;
+            
+            // LÓGICA CORRIGIDA DAS OBSERVAÇÕES
+            let obs = [];
+            if (bv) obs.push("Bate e Volta");
+            if (ab) obs.push("+ Abastecimento");
+            if (obs.length > 0) txt += `📝 Obs: ${obs.join(" / ")}\n`;
+            
+            if (motoristaValido) txt += `\n👤 Motorista: ${n}\n🆔 Matrícula: ${mat}`;
             return txt;
         }
     }

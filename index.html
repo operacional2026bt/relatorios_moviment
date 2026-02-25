@@ -31,9 +31,11 @@
             display: flex; align-items: center; gap: 10px;
             background: #1e1e1e; padding: 12px; border-radius: 8px;
             border: 1px solid #333; margin-bottom: 10px; cursor: pointer;
+            user-select: none;
         }
         .check-group.disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; filter: grayscale(1); }
-        .check-group input { width: 22px; height: 22px; accent-color: #00e676; }
+        .check-group input { width: 22px; height: 22px; accent-color: #00e676; cursor: pointer; }
+        .check-group span { flex: 1; cursor: pointer; }
 
         #preview-container { display: none; margin-top: 10px; margin-bottom: 20px; }
         .preview-box {
@@ -51,6 +53,11 @@
         .btn-clear { background-color: #333; color: #e0e0e0; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-top: 15px; cursor: pointer; }
         .status-msg { text-align: center; font-size: 12px; margin-top: 10px; color: #00e676; visibility: hidden; }
         .footer-sig { margin-top: 40px; font-size: 10px; color: #444; text-align: center; }
+
+        /* Acesso Discreto Suporte e Adm */
+        .access-row { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+        .dot { width: 12px; height: 12px; background: #222; border-radius: 50%; cursor: pointer; transition: 0.3s; }
+        .dot:hover { background: #333; }
     </style>
 </head>
 <body>
@@ -89,17 +96,25 @@
 
     <div class="form-group">
         <label>Adicionais</label>
-        <div class="check-group lock-on-abast" id="div-icmbio">
-            <input type="checkbox" id="icmbio" onchange="validarVisibilidade()">
+        <div class="check-group lock-on-abast" onclick="toggleCheck('icmbio', event)">
+            <input type="checkbox" id="icmbio" onchange="validarVisibilidade()" onclick="event.stopPropagation()">
             <span>ICMbio</span>
         </div>
-        <div class="check-group">
-            <input type="checkbox" id="incHorario" onchange="validarVisibilidade()">
+        <div class="check-group" onclick="toggleCheck('incHorario', event)">
+            <input type="checkbox" id="incHorario" onchange="validarVisibilidade()" onclick="event.stopPropagation()">
             <span>Incluir Horário no Resumo</span>
         </div>
-        <div class="check-group lock-on-abast" id="div-bv">
-            <input type="checkbox" id="bateVolta" onchange="validarVisibilidade()">
+        <div class="check-group lock-on-abast" onclick="toggleCheck('bateVolta', event)">
+            <input type="checkbox" id="bateVolta" onchange="validarVisibilidade()" onclick="event.stopPropagation()">
             <span>Bate e Volta</span>
+        </div>
+        <div class="check-group lock-on-abast" onclick="toggleCheck('segundoHorario', event)">
+            <input type="checkbox" id="segundoHorario" onchange="validarVisibilidade()" onclick="event.stopPropagation()">
+            <span>Segundo Horário</span>
+        </div>
+        <div class="check-group lock-on-abast" onclick="toggleCheck('extraAbast', event)">
+            <input type="checkbox" id="extraAbast" onchange="validarVisibilidade()" onclick="event.stopPropagation()">
+            <span>+ Abastecimento</span>
         </div>
     </div>
 
@@ -109,7 +124,7 @@
     </div>
 
     <div class="form-group">
-        <label>Motorista:</label>
+        <label>Motorista Identificado:</label>
         <span id="nome-exibicao" class="nome-display">Aguardando matrícula...</span>
     </div>
 
@@ -120,111 +135,94 @@
 
     <button class="btn-copy" id="btnCopiar" onclick="copiarRelatorio('completo')">COPIAR RELATÓRIO</button>
     <button class="btn-short" id="btnCopiarCurto" onclick="copiarRelatorio('curto')">COPIAR CURTO (WHATSAPP)</button>
-    
     <button class="btn-clear" onclick="limparCampos()">LIMPAR TUDO</button>
 
     <p id="status" class="status-msg">Copiado com sucesso! ✅</p>
 
-    <div class="footer-sig">by Tiago C Araujo – Bel-tour 🚌</div>
+    <div class="footer-sig">by Tiago C Araujo – Araújo II – mat 3240 – Bel-tour 🚌🗽🚠😎👨‍✈️</div>
+    
+    <div class="access-row">
+        <div class="dot" onclick="acesso('adm')" title="Adm"></div>
+        <div class="dot" onclick="acesso('suporte')" title="Suporte"></div>
+    </div>
 </div>
 
 <script>
-    // Gerar opções de tempo
-    const sH = document.getElementById('hora');
-    const sM = document.getElementById('minuto');
+    const sH = document.getElementById('hora'); const sM = document.getElementById('minuto');
     for(let i=0; i<24; i++) { let h = i<10?'0'+i:i; sH.options[sH.options.length] = new Option(h, h); }
     for(let i=0; i<60; i++) { let m = i<10?'0'+i:i; sM.options[sM.options.length] = new Option(m, m); }
-    
-    const agora = new Date();
-    sH.value = agora.getHours() < 10 ? '0' + agora.getHours() : agora.getHours();
-    sM.value = agora.getMinutes() < 10 ? '0' + agora.getMinutes() : agora.getMinutes();
+    const agora = new Date(); sH.value = agora.getHours() < 10 ? '0' + agora.getHours() : agora.getHours(); sM.value = agora.getMinutes() < 10 ? '0' + agora.getMinutes() : agora.getMinutes();
 
-    function verificarTipo() {
-        const emb = document.getElementById('embarque').value;
-        const locks = document.querySelectorAll('.lock-on-abast');
-        document.getElementById('label-quantidade').innerText = (emb === "ABASTECIMENTO") ? "KM" : "Qtd. Integrantes";
-        locks.forEach(div => {
-            div.classList.toggle('disabled', emb === "ABASTECIMENTO");
-            if(emb === "ABASTECIMENTO") div.querySelector('input').checked = false;
-        });
+    function toggleCheck(id, ev) { 
+        const el = document.getElementById(id); if (el.closest('.check-group').classList.contains('disabled')) return;
+        if (ev.target !== el) el.checked = !el.checked; validarVisibilidade();
+    }
+
+    function obterSaudacao() { const h = parseInt(sH.value); return (h >= 5 && h < 12) ? "Bom dia!" : (h >= 12 && h < 18) ? "Boa tarde!" : "Boa noite!"; }
+
+    function buscarMotorista() {
+        const mat = document.getElementById('matricula').value; const display = document.getElementById('nome-exibicao');
+        if (typeof bancoMotoristas !== 'undefined' && bancoMotoristas[mat]) { display.innerText = bancoMotoristas[mat]; display.style.color = "#00e676"; }
+        else { display.innerText = mat ? "MOTORISTA NÃO LOCALIZADO" : "Aguardando matrícula..."; display.style.color = mat ? "#ff5252" : "#444"; }
         validarVisibilidade();
     }
 
-    function buscarMotorista() {
-        const mat = document.getElementById('matricula').value;
-        const display = document.getElementById('nome-exibicao');
-        if (typeof bancoMotoristas !== 'undefined' && bancoMotoristas[mat]) {
-            display.innerText = bancoMotoristas[mat];
-            display.style.color = "#00e676";
-        } else {
-            display.innerText = mat ? "MOTORISTA NÃO LOCALIZADO" : "Aguardando matrícula...";
-            display.style.color = mat ? "#ff5252" : "#444";
-        }
+    function verificarTipo() {
+        const emb = document.getElementById('embarque').value; const locks = document.querySelectorAll('.lock-on-abast');
+        document.getElementById('label-quantidade').innerText = (emb === "ABASTECIMENTO") ? "KM" : "Qtd. Integrantes";
+        locks.forEach(div => { if (emb === "ABASTECIMENTO") { div.classList.add('disabled'); div.querySelector('input').checked = false; } else div.classList.remove('disabled'); });
         validarVisibilidade();
     }
 
     function validarVisibilidade() {
-        const q = document.getElementById('quantidade').value;
-        const v = document.getElementById('van').value;
-        const m = document.getElementById('matricula').value;
+        const q = document.getElementById('quantidade').value; const v = document.getElementById('van').value; const m = document.getElementById('matricula').value;
         document.getElementById('preview-container').style.display = (q || v || m) ? 'block' : 'none';
-        document.getElementById('preview').innerText = gerarTexto('completo');
-        document.getElementById('preview-curto').innerText = gerarTexto('curto');
+        document.getElementById('preview').innerText = gerarTexto('completo'); document.getElementById('preview-curto').innerText = gerarTexto('curto');
     }
 
     function gerarTexto(tipo) {
-        const emb = document.getElementById('embarque').value;
-        const h = sH.value; const mi = sM.value;
-        const q = document.getElementById('quantidade').value || "0";
-        const v = document.getElementById('van').value || "---";
-        const n = document.getElementById('nome-exibicao').innerText;
-        const mat = document.getElementById('matricula').value;
-        const icm = document.getElementById('icmbio').checked;
-        const bv = document.getElementById('bateVolta').checked;
-        const incH = document.getElementById('incHorario').checked;
+        const emb = document.getElementById('embarque').value; const h = sH.value; const mi = sM.value;
+        const q = document.getElementById('quantidade').value || "0"; const v = document.getElementById('van').value || "";
+        const n = document.getElementById('nome-exibicao').innerText; const mat = document.getElementById('matricula').value;
+        const bv = document.getElementById('bateVolta').checked; const sh = document.getElementById('segundoHorario').checked;
+        const ab = document.getElementById('extraAbast').checked; const icm = document.getElementById('icmbio').checked; const incH = document.getElementById('incHorario').checked;
+        const saudacao = obterSaudacao();
 
         if (tipo === 'curto') {
-            let res = `${incH ? h+':'+mi+'\n' : ''}${v}\n${emb}${icm?' (ICMbio)':''}\n${q} ${emb==='ABASTECIMENTO'?'KM':'Inter'}${bv?' (B/V)':''}\n${n}`;
+            let res = `${saudacao}\n${incH ? h+':'+mi+'\n' : ''}\n${v?'VTR '+v+'\n':''}${emb}${icm?' (ICMbio)':''}\n${q} ${emb==='ABASTECIMENTO'?'KM':'Inter'}`;
+            if (sh) res += `\nSegundo Horário`;
+            let extras = []; if(bv) extras.push("B/V"); if(ab) extras.push("+Abast");
+            if(extras.length > 0) res += ` (${extras.join("/")})`;
+            if(mat) res += `\n\n👤 ${n}\n🆔 ${mat}`;
             return res;
         } else {
-            return `*RELATÓRIO DE VANS*\n📍 Local: ${emb}${icm?' (ICMbio)':''}\n⏰ Horário: ${h}:${mi}\n🚐 Van: ${v}\n${emb==='ABASTECIMENTO'?'🛣️ KM':'👥 Qtd'}: ${q}\n${bv?'📝 Obs: Bate e Volta\n':''}👤 Motorista: ${n}\n🆔 Matrícula: ${mat}`;
+            let txt = `${saudacao}\n\n*RELATÓRIO DE VANS*\n📍 Local: ${emb}${icm?' (ICMbio)':''}\n⏰ Horário: ${h}:${mi}\n${emb==='ABASTECIMENTO'?'🛣️ KM':'👥 Qtd'}: ${q}\n${v?'🚐 Van: '+v+'\n':''}`;
+            if(sh) txt += `\n Segundo Horário`;
+            let obs = []; if(bv) obs.push("Bate e Volta"); if(ab) obs.push("+ Abastecimento");
+            if(obs.length > 0) txt += `📝 Obs: ${obs.join(" / ")}\n`;
+            if(mat) txt += `\n👤 Motorista: ${n}\n🆔 Matrícula: ${mat}`;
+            return txt;
         }
     }
 
-    // FUNÇÃO QUE CONECTA COM O ADMINISTRADOR
     async function copiarRelatorio(tipo) {
-        const texto = gerarTexto(tipo);
-        const m = document.getElementById('matricula').value;
-        const n = document.getElementById('nome-exibicao').innerText;
-
-        navigator.clipboard.writeText(texto).then(async () => {
-            const status = document.getElementById('status');
-            status.style.visibility = 'visible';
-            setTimeout(() => { status.style.visibility = 'hidden'; }, 2000);
-
-            // Envia o Log para o Banco (Invisível para o motorista)
-            if (m && !n.includes("Aguardando") && !n.includes("NÃO")) {
-                try {
-                    await fetch('/api/gerenciar', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            acao: 'registrar_log',
-                            log: { usuario: `${n} (${m})`, texto: `Gerou relatório ${tipo} - Van ${document.getElementById('van').value || '?'}` }
-                        })
-                    });
-                } catch (e) { console.log("Erro log silencioso"); }
+        const t = gerarTexto(tipo); const m = document.getElementById('matricula').value; const n = document.getElementById('nome-exibicao').innerText;
+        navigator.clipboard.writeText(t).then(async () => {
+            const s = document.getElementById('status'); s.style.visibility = 'visible'; setTimeout(() => s.style.visibility = 'hidden', 2000);
+            if (m && !n.includes("Aguardando")) {
+                await fetch('/api/gerenciar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ acao: 'registrar_log', log: { usuario: `${n} (${m})`, texto: `Gerou ${tipo} - Van ${document.getElementById('van').value || '?'}` } }) });
             }
         });
     }
 
-    function limparCampos() {
-        document.getElementById('quantidade').value = "";
-        document.getElementById('van').value = "";
-        document.getElementById('matricula').value = "";
-        document.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = false);
-        buscarMotorista();
+    function acesso(nivel) {
+        const s = (nivel === 'adm') ? 'aDmtiago2026' : 'Stiago2026';
+        const p = prompt("Chave de acesso:");
+        if (p === s) window.location.href = 'admin.html';
+        else if (p !== null) alert("Negado.");
     }
+
+    function limparCampos() { document.querySelectorAll('input').forEach(i => i.value = ""); document.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false); buscarMotorista(); }
 </script>
 </body>
 </html>

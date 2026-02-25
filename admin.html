@@ -3,82 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrador</title>
+    <title>ADM - Controle Bel-tour</title>
     <style>
-        body { background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .restrito { width: 100%; max-width: 400px; display: none; }
-        #login { width: 100%; max-width: 400px; margin-top: 50px; }
-        .card { background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
-        h2 { color: #00e676; font-size: 14px; text-transform: uppercase; margin-bottom: 15px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-ok { background: #00e676; color: #000; }
-        .btn-log { background: #333; color: #00e676; border: 1px solid #00e676; margin-top: 10px; }
-        .btn-del { background: #3d1a1a; color: #ff5252; margin-top: 20px; font-size: 11px; }
-        .lista { padding: 0; }
-        .item { border-bottom: 1px solid #333; padding: 10px 0; font-size: 12px; list-style: none; }
+        /* Design Padrão TiagoAraujo: Dark Mode e Vertical */
+        body { 
+            background-color: #121212; color: #e0e0e0; 
+            font-family: -apple-system, sans-serif; 
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+        }
+        .container { width: 100%; max-width: 400px; display: none; }
+        #login-area { width: 100%; max-width: 400px; margin-top: 60px; text-align: center; }
+        
+        .card { 
+            background: #1e1e1e; padding: 15px; border-radius: 8px; 
+            border: 1px solid #333; margin-bottom: 20px; width: 100%; box-sizing: border-box;
+        }
+        
+        h2 { color: #00e676; font-size: 14px; text-transform: uppercase; margin-bottom: 15px; text-align: center; }
+        
+        label { font-size: 12px; color: #b0b0b0; display: block; margin-bottom: 5px; }
+        
+        input { 
+            width: 100%; padding: 12px; margin-bottom: 15px; 
+            background: #2a2a2a; border: 1px solid #444; color: white; 
+            border-radius: 6px; font-size: 16px; outline: none; box-sizing: border-box;
+        }
+        
+        button { 
+            width: 100%; padding: 14px; border: none; border-radius: 8px; 
+            font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.3s;
+        }
+        
+        .btn-salvar { background: #00e676; color: #000; margin-bottom: 10px; }
+        .btn-atualizar { background: #333; color: #00e676; border: 1px solid #00e676; margin-bottom: 10px; }
+        .btn-excluir { background: #3d1a1a; color: #ff5252; margin-top: 10px; font-size: 11px; }
+
+        .lista-logs { padding: 0; margin: 0; list-style: none; }
+        .log-item { 
+            border-bottom: 1px solid #333; padding: 12px 0; font-size: 12px; 
+            line-height: 1.4;
+        }
+        .log-data { color: #00e676; font-size: 10px; display: block; margin-bottom: 2px; }
     </style>
 </head>
 <body>
-    <div id="login">
+
+    <div id="login-area">
         <div class="card">
             <h2>ACESSO ADMINISTRADOR</h2>
-            <input type="password" id="pass" placeholder="Senha de Acesso">
-            <button class="btn-ok" onclick="acessar()">ENTRAR</button>
+            <input type="password" id="senha-acesso" placeholder="Digite a Senha">
+            <button class="btn-salvar" onclick="verificarAcesso()">ENTRAR NO PAINEL</button>
         </div>
     </div>
 
-    <div class="restrito" id="painel">
-        <h2>GERENCIAR DADOS</h2>
+    <div class="container" id="painel">
+        
+        <h2>ALIMENTAR MOTORISTAS</h2>
         <div class="card">
-            <input type="number" id="mat" placeholder="Matrícula">
-            <input type="text" id="nome" placeholder="Nome do Motorista">
-            <input type="text" id="senha" placeholder="Senha (6 dígitos)">
-            <button class="btn-ok" onclick="salvar()">SALVAR / ATUALIZAR</button>
-            <button class="btn-del" onclick="excluir()">EXCLUIR REGISTRO</button>
+            <label>NÚMERO DA MATRÍCULA</label>
+            <input type="number" id="m-mat" placeholder="Ex: 3240">
+            
+            <label>NOME DO MOTORISTA</label>
+            <input type="text" id="m-nome" placeholder="NOME COMPLETO">
+            
+            <label>SENHA (6 DÍGITOS)</label>
+            <input type="text" id="m-senha" placeholder="SENHA PARA ACESSO">
+            
+            <button class="btn-salvar" onclick="salvarDados()">SALVAR / ATUALIZAR</button>
+            <button class="btn-excluir" onclick="excluirDados()">EXCLUIR MOTORISTA</button>
         </div>
 
-        <h2>HISTÓRICO DE ATIVIDADE</h2>
+        <h2>REGISTRO DE ATIVIDADES</h2>
         <div class="card">
-            <button class="btn-log" onclick="carregar()">ATUALIZAR LISTA</button>
-            <ul id="log-list" class="lista"></ul>
+            <button class="btn-atualizar" onclick="carregarLogs()">ATUALIZAR LISTA</button>
+            <ul id="log-ul" class="lista-logs"></ul>
         </div>
+
     </div>
 
     <script>
-        const SENHA_ADM = "TIAGO2026"; // Senha para os seus auxiliares
+        // SENHA DO ADMINISTRADOR (COMO SUPORTE, VOCÊ PODE ALTERAR AQUI)
+        const CHAVE_MESTRE = "TIAGO2026";
 
-        function acessar() {
-            if(document.getElementById('pass').value === SENHA_ADM) {
-                document.getElementById('login').style.display = 'none';
+        function verificarAcesso() {
+            const senha = document.getElementById('senha-acesso').value;
+            if (senha === CHAVE_MESTRE) {
+                document.getElementById('login-area').style.display = 'none';
                 document.getElementById('painel').style.display = 'block';
-                carregar();
-            } else { alert("Senha incorreta"); }
+                carregarLogs();
+            } else {
+                alert("Senha Incorreta!");
+            }
         }
 
-        async function salvar() {
-            const m = { mat: document.getElementById('mat').value, nome: document.getElementById('nome').value.toUpperCase(), senha: document.getElementById('senha').value };
-            if(!m.mat || !m.nome) return alert("Preencha Matrícula e Nome!");
-            await fetch('/api/gerenciar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ acao: 'salvar_motorista', motorista: m }) });
-            alert("Salvo com sucesso!");
+        async function salvarDados() {
+            const motorista = {
+                mat: document.getElementById('m-mat').value,
+                nome: document.getElementById('m-nome').value.toUpperCase(),
+                senha: document.getElementById('m-senha').value
+            };
+
+            if (!motorista.mat || !motorista.nome) {
+                return alert("Matrícula e Nome são obrigatórios!");
+            }
+
+            const res = await fetch('/api/gerenciar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ acao: 'salvar_motorista', motorista })
+            });
+
+            if (res.ok) {
+                alert("Motorista alimentado com sucesso!");
+                document.getElementById('m-mat').value = '';
+                document.getElementById('m-nome').value = '';
+                document.getElementById('m-senha').value = '';
+            }
         }
 
-        async function excluir() {
-            const mat = document.getElementById('mat').value;
-            if(!mat || !confirm("Confirmar exclusão?")) return;
-            await fetch('/api/gerenciar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ acao: 'excluir_motorista', mat }) });
-            alert("Removido.");
+        async function excluirDados() {
+            const mat = document.getElementById('m-mat').value;
+            if (!mat) return alert("Digite a matrícula para excluir!");
+
+            if (confirm("Deseja realmente apagar este motorista do banco?")) {
+                const res = await fetch('/api/gerenciar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ acao: 'excluir_motorista', mat })
+                });
+                if (res.ok) {
+                    alert("Registro removido.");
+                    document.getElementById('m-mat').value = '';
+                }
+            }
         }
 
-        async function carregar() {
-            const res = await fetch('/api/gerenciar', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ acao: 'listar_logs' }) });
+        async function carregarLogs() {
+            const res = await fetch('/api/gerenciar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ acao: 'listar_logs' })
+            });
             const logs = await res.json();
-            document.getElementById('log-list').innerHTML = logs.map(l => {
+            const ul = document.getElementById('log-ul');
+            ul.innerHTML = logs.map(l => {
                 const item = JSON.parse(l);
-                return `<li class="item"><b>${new Date(item.data).toLocaleString('pt-BR')}</b><br>${item.usuario}: ${item.detalhes}</li>`;
-            }).join('');
+                const dataFormatada = new Date(item.data).toLocaleString('pt-BR');
+                return `<li class="log-item">
+                            <span class="log-data">${dataFormatada}</span>
+                            <strong>${item.usuario}:</strong> ${item.detalhes}
+                        </li>`;
+            }).reverse().join(''); // Mostra os mais recentes primeiro
         }
     </script>
 </body>
 </html>
-
